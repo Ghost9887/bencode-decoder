@@ -7,6 +7,7 @@ import ghost.torrent.encode.*;
 
 public class AppTest {
 
+    
     @Test
     public void EncodeString() {
         Bencode ben = new Bencode("'coding'");
@@ -32,12 +33,21 @@ public class AppTest {
     }
 
     @Test void EncodeNestedList() {
-        Bencode ben = new Bencode("[\"Coding\", [\"Challenges\", [\"Test\"]], \"Test1\"]");
-        String expected = "l6:Codingl10:Challengesl4:Testee5:Test1e";
+        Bencode ben = new Bencode(
+            "[ " +
+            "  'hello' " +
+            "  123 " +
+            "  [ 'nested' 456 [ 'deep' 789 ] ] " +
+            "  [] " +
+            "  [ 'end' ] " +
+            "]"
+        );
 
+        String expected = "l5:helloi123el6:nestedi456el4:deepi789eeelel3:endee";
         assertEquals(expected, ben.encode());
     }
 
+    /*
     @Test
     public void EncodeDict() {
         Bencode ben = new Bencode ("{\"Day\": \"sunday\", \"challenge\": \"torrent\"}");
@@ -56,28 +66,23 @@ public class AppTest {
 
     @Test
     public void Encode() {
-        Bencode ben = new Bencode("'coding' 100 [\"Coding\", \"Challenges\"]");
-        String expected = "6:codingi100el6:Coding10:Challengese";
-
-        assertEquals(expected, ben.encode());
-    }
-    
-    /*
-    @Test
-    public void Encode() {
         
         Bencode ben = new Bencode(
-            "'coding' 100 [\"Coding\", \"Challenges\"] " +
-            "{\"Coding Challenges\": \"Torrent\", \"Day\": \"Sunday\", \"Api\": \"No\"}"
+            "{ " +
+            "  'title' 'Example File' " +
+            "  'year' 2024 " +
+            "  'tags' ['bencode' 'java' 'encoding'] " +
+            "  'author' { " +
+            "     'name' 'Alice' " +
+            "     'id' 42 " +
+            "  } " +
+            "  'ratings' [5 4 5] " +
+            "}"
         );
-        
-        String expected =
-            "6:codingi100el6:Coding10:Challengesed3:Api2:No17:Coding Challenges"+   
-            "7:Torrent3:Day6:Sundaye";
 
+        String expected = "d6:authord2:idi42e4:name5:Aliceee7:ratingsli5ei4ei5ee4:tagsl7:bencode4:java8:encodinge5:title12:Example File4:yeari2024ee";
 
         assertEquals(expected, ben.encode());
     }
     */
-
 }

@@ -51,10 +51,7 @@ public class Bencode {
                         break;
                     default:
                         if(isNum(c)) {
-                            String num = parseNum();
-                            res.append('i');
-                            res.append(num);
-                            res.append('e');
+                            res.append(parseNum());
                         }else {
                             System.out.println("Invalid char: " + c);
                             return null;
@@ -75,44 +72,7 @@ public class Bencode {
     private String parseDict() {
         StringBuilder str = new StringBuilder();
         
-        Stack<TreeMap<String, String>> stack = new Stack<>();
-        stack.push(new TreeMap<>());
-        List<String> list = new ArrayList<>();
 
-        advance();
-        while (true) {
-            Optional<Character> c = peek();
-            if (c.isPresent() && !stack.isEmpty()) {
-                switch (c.get()) {
-                    case '"':
-                        list.add(parseWord());
-                        break;
-                    case '{':
-                        stack.peek().put(list.get(0), "");
-                        stack.push(new TreeMap<>());
-                        list.clear();
-                        break;
-                    case '}':
-                        str.append('d');
-                        for (Map.Entry<String, String> entry : stack.pop().entrySet()) {
-                            str.append(entry.getKey());
-                            if (entry.getValue().length() > 0) {
-                                str.append(entry.getValue());
-                            }
-                        }
-                        str.append('e');
-                    default:
-                        break;
-                }
-                if (list.size() == 2) {
-                    stack.peek().put(list.get(0), list.get(1));
-                    list.clear();
-                }
-                advance();
-            }else {
-                break;
-            }
-        }
 
         return str.toString();
     }
@@ -126,9 +86,14 @@ public class Bencode {
 
         advance();
         while (true) {
-            Optional<Character> c = peek();
-            if (c.isPresent() && !stack.isEmpty()) {
-                switch (c.get()) {
+            Optional<Character> cOpt = peek();
+            if (cOpt.isPresent() && !stack.isEmpty()) {
+                char c = cOpt.get();
+                switch (c) {
+                    case '{':
+                        str.append(parseDict());
+                        break;
+                    case '\'':
                     case '"':
                         str.append(parseWord());
                         break;
@@ -140,6 +105,9 @@ public class Bencode {
                         stack.pop();
                         str.append('e');
                     default:
+                        if (isNum(c)) {
+                            str.append(parseNum());
+                        }
                         break;
                 }
                 advance();
@@ -175,6 +143,7 @@ public class Bencode {
 
     private String parseNum() {
         StringBuilder str = new StringBuilder();
+        str.append('i');
         while(true) {
             Optional<Character> c = peek();
             if (c.isPresent() && isNum(c.get())) {
@@ -184,6 +153,7 @@ public class Bencode {
                 break;
             }
         }
+        str.append('e');
         return str.toString();
     }
 
