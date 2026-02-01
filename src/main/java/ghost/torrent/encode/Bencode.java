@@ -4,6 +4,9 @@ import java.util.Optional;
 import java.util.Stack;
 import java.util.List;
 import java.util.ArrayList;
+import java.util.TreeMap;
+import java.util.Map;
+import java.util.Collections;
 
 public class Bencode {
     
@@ -40,7 +43,7 @@ public class Bencode {
                         res.append(parseList());
                         break;
                     case '{':
-                        res.append(parseDic());
+                        res.append(parseDict());
                         break;
                     case '\'':
                     case '"':
@@ -69,8 +72,49 @@ public class Bencode {
     public void decode() {
     }
 
-    private String parseDic() {
-        return "";
+    private String parseDict() {
+        StringBuilder str = new StringBuilder();
+        
+        Stack<TreeMap<String, String>> stack = new Stack<>();
+        stack.push(new TreeMap<>());
+        List<String> list = new ArrayList<>();
+
+        advance();
+        while (true) {
+            Optional<Character> c = peek();
+            if (c.isPresent() && !stack.isEmpty()) {
+                switch (c.get()) {
+                    case '"':
+                        list.add(parseWord());
+                        break;
+                    case '{':
+                        stack.peek().put(list.get(0), "");
+                        stack.push(new TreeMap<>());
+                        list.clear();
+                        break;
+                    case '}':
+                        str.append('d');
+                        for (Map.Entry<String, String> entry : stack.pop().entrySet()) {
+                            str.append(entry.getKey());
+                            if (entry.getValue().length() > 0) {
+                                str.append(entry.getValue());
+                            }
+                        }
+                        str.append('e');
+                    default:
+                        break;
+                }
+                if (list.size() == 2) {
+                    stack.peek().put(list.get(0), list.get(1));
+                    list.clear();
+                }
+                advance();
+            }else {
+                break;
+            }
+        }
+
+        return str.toString();
     }
 
     private String parseList() {
