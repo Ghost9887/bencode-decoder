@@ -29,6 +29,10 @@ public class Bencode {
         ip++;
     }
 
+    private void retreat() {
+        ip--;
+    }
+
     public String encode() {
         StringBuilder res = new StringBuilder();
     
@@ -71,20 +75,60 @@ public class Bencode {
 
     private String parseDict() {
         StringBuilder str = new StringBuilder();
-        return str.toString();
+        List<String> list = new ArrayList<>();
+        GhostQueue q = new GhostQueue();
+        
+        str.append('d');
+
+        advance();
+        while (true) {
+            Optional<Character> cOpt = peek();
+            if (cOpt.isPresent()) {
+                char c = cOpt.get();
+                switch (c) {
+                    case '"':
+                    case '\'':
+                        list.add(parseWord());
+                        break;
+                    case '[':
+                        list.add(parseList());
+                        break;
+                    case '{':
+                        list.add(parseDict());
+                        break;
+                    case '}':
+                        while(!q.isEmpty()) {
+                            str.append(q.pop());
+                        }
+                        str.append('e');
+                        return str.toString();
+                    default:
+                        if (isNum(c)){
+                            list.add(parseNum());    
+                            continue;
+                        }
+                        break;
+                }
+                if (list.size() >= 2) {
+                    q.push(list.get(0), list.get(1));
+                    list.clear();
+                }
+                advance();
+            }else {
+                break;
+            }
+        }
+        return null;
     }
 
     private String parseList() {
         StringBuilder str = new StringBuilder();
-
-        Stack<Character> stack = new Stack<>();
-        stack.push('[');
         str.append('l');
 
         advance();
         while (true) {
             Optional<Character> cOpt = peek();
-            if (cOpt.isPresent() && !stack.isEmpty()) {
+            if (cOpt.isPresent()) {
                 char c = cOpt.get();
                 switch (c) {
                     case '{':
@@ -95,16 +139,16 @@ public class Bencode {
                         str.append(parseWord());
                         break;
                     case '[':
-                        stack.push('[');
-                        str.append('l');
+                        str.append(parseList());
                         break;
                     case ']':
-                        stack.pop();
                         str.append('e');
+                        return str.toString();
                     default:
                         if (isNum(c)) {
                             str.append(parseNum());
-                        }
+                            continue;
+                        };
                         break;
                 }
                 advance();
@@ -112,8 +156,7 @@ public class Bencode {
                 break;
             }
         }
-
-        return str.toString();
+        return null;
     }
 
     private String parseWord() {
@@ -155,6 +198,6 @@ public class Bencode {
     }
 
     private boolean isNum(char c) {
-        return '0' <= c && c <= '9';
+        return '0' <= c && c <= '9' || c == '-';
     }
 }
