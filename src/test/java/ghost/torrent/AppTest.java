@@ -69,6 +69,8 @@ public class AppTest {
         assertEquals(expected, ben.decode());
     }
 
+    
+
     @Test
     public void EncodeString() {
         Bencode ben = new Bencode("'coding'".getBytes());
@@ -128,5 +130,15 @@ public class AppTest {
         String expected = "d6:authord2:idi42e4:name5:Alicee7:ratingsli5ei4ei5ee4:tagsl7:bencode4:java8:encodinge5:title12:Example File4:yeari2024ee";
 
         assertEquals(expected, ben.encode());
+    }
+
+
+    @Test
+    public void decodeEncode() {
+        Bencode ben = new Bencode("d6:authord2:idi42e4:name5:Alicee7:ratingsli5ei4ei5ee4:tagsl7:bencode4:java8:encodinge5:title12:Example File4:yeari2024ee".getBytes());
+        Bencode ben2 = new Bencode(ben.decode().getBytes());
+
+        String expected = "d6:authord2:idi42e4:name5:Alicee7:ratingsli5ei4ei5ee4:tagsl7:bencode4:java8:encodinge5:title12:Example File4:yeari2024ee";
+        assertEquals(expected, ben2.encode());
     }
 }
