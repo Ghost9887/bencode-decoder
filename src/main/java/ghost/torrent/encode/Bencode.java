@@ -10,17 +10,16 @@ import java.util.Collections;
 
 public class Bencode {
     
-    private final String content;
+    private final byte[] content;
     private int ip = 0;
 
-    public Bencode(String content) {
+    public Bencode(byte[] content) {
         this.content = content;
     }
 
-    private Optional<Character> peek() {
-        if (ip < content.length()) {
-            char c = content.charAt(ip);
-            return Optional.of(c);
+    private Optional<Byte> peek() {
+        if (ip < content.length) {
+             return Optional.of(content[ip]);
         }
         return Optional.empty();
     }
@@ -37,9 +36,9 @@ public class Bencode {
         StringBuilder res = new StringBuilder();
     
         while(true) {
-            Optional<Character> cOpt = peek();
+            Optional<Byte> cOpt = peek();
             if (cOpt.isPresent()) {
-                char c = cOpt.get();
+                byte c = cOpt.get();
                 switch (c) {
                     case 'i':
                         res.append(decodeNum());
@@ -56,7 +55,6 @@ public class Bencode {
                         }
                         break;
                 }
-                System.out.println(res.toString());
                 advance();
             }else {
                 break;
@@ -73,9 +71,9 @@ public class Bencode {
 
         advance();
         while (true) {
-            Optional<Character> cOpt = peek();
+            Optional<Byte> cOpt = peek();
             if (cOpt.isPresent()) {
-                char c = cOpt.get();
+                byte c = cOpt.get();
                 switch (c) {
                     case 'e':
                         str.append('}');
@@ -85,17 +83,19 @@ public class Bencode {
                         break;
                     case 'd':
                         str.append(decodeDict());
+                        counter = 0;
                         break;
                     case 'i':
                         str.append(decodeNum());
+                        counter++;
                         break;
                     default:
                         if (isNum(c)) {
                             str.append(decodeWord());
+                            counter++;
                         }
                         break;
                 }
-                counter++;
                 if (counter % 2 == 1){
                     str.append(':');
                 }else {
@@ -114,9 +114,9 @@ public class Bencode {
 
         advance();
         while (true) {
-            Optional<Character> cOpt = peek();
+            Optional<Byte> cOpt = peek();
             if (cOpt.isPresent()) {
-                char c = cOpt.get();
+                byte c = cOpt.get();
                 switch (c) {
                     case 'e':
                         str.append(']');
@@ -148,11 +148,11 @@ public class Bencode {
 
         advance();
         while (true) {
-            Optional<Character> cOpt = peek();
+            Optional<Byte> cOpt = peek();
             if (cOpt.isPresent()) {
-                char c = cOpt.get();
+                byte c = cOpt.get();
                 if (isNum(c)) {
-                    str.append(c);
+                    str.append((char)c);
                     advance();
                 }
                 else{
@@ -170,11 +170,11 @@ public class Bencode {
         StringBuilder length = new StringBuilder();
 
         while (true) {
-            Optional<Character> cOpt = peek();
+            Optional<Byte> cOpt = peek();
             if (cOpt.isPresent()) {
-                char c = cOpt.get();
+                byte c = cOpt.get();
                 if (isNum(c)) {
-                    length.append(c);
+                    length.append((char) c);
                     advance();
                 }else {
                     str.append("'");
@@ -186,21 +186,24 @@ public class Bencode {
 
         int l = Integer.parseInt(length.toString());
         for (int i = 0; i < l - 1; i++) {
-            str.append(peek().get());
+            byte b = peek().get();
+            str.append((char) b);
             advance();
         }
-        str.append(peek().get());
+        byte b = peek().get();
+        str.append((char) b);
         str.append("' ");
         return str.toString();
     }
+
 
     public String encode() {
         StringBuilder res = new StringBuilder();
     
         while(true) {
-            Optional<Character> cOpt = peek();
+            Optional<Byte> cOpt = peek();
             if (cOpt.isPresent()) {
-                char c = cOpt.get();
+                byte c = cOpt.get();
                 switch (c) {
                     case ' ':
                         break;
@@ -217,10 +220,8 @@ public class Bencode {
                     default:
                         if(isNum(c)) {
                             res.append(encodeNum());
-                        }else {
-                            System.out.println("Invalid char: " + c);
-                            return null;
                         }
+                        break;
                 }
                 advance();
             }else {
@@ -240,9 +241,9 @@ public class Bencode {
 
         advance();
         while (true) {
-            Optional<Character> cOpt = peek();
+            Optional<Byte> cOpt = peek();
             if (cOpt.isPresent()) {
-                char c = cOpt.get();
+                byte c = cOpt.get();
                 switch (c) {
                     case '"':
                     case '\'':
@@ -285,9 +286,9 @@ public class Bencode {
 
         advance();
         while (true) {
-            Optional<Character> cOpt = peek();
+            Optional<Byte> cOpt = peek();
             if (cOpt.isPresent()) {
-                char c = cOpt.get();
+                byte c = cOpt.get();
                 switch (c) {
                     case '{':
                         str.append(encodeDict());
@@ -323,9 +324,10 @@ public class Bencode {
         StringBuilder word = new StringBuilder();
 
         while(true) {
-            Optional<Character> c = peek();
+            Optional<Byte> c = peek();
             if (c.isPresent() && c.get() != '"' && c.isPresent() && c.get() != '\'') {
-                word.append(c.get());       
+                byte b = c.get();
+                word.append((char) b);       
                 advance();
             }else {
                 break;
@@ -343,9 +345,10 @@ public class Bencode {
         StringBuilder str = new StringBuilder();
         str.append('i');
         while(true) {
-            Optional<Character> c = peek();
+            Optional<Byte> c = peek();
             if (c.isPresent() && isNum(c.get())) {
-                str.append(c.get());       
+                byte b = c.get();
+                str.append((char) b);       
                 advance();
             }else {
                 break;
@@ -355,7 +358,7 @@ public class Bencode {
         return str.toString();
     }
 
-    private boolean isNum(char c) {
+    private boolean isNum(byte c) {
         return '0' <= c && c <= '9' || c == '-';
     }
 }
