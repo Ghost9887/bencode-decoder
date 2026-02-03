@@ -44,6 +44,9 @@ public class Bencode {
                     case 'i':
                         res.append(decodeNum());
                         break;
+                    case 'l':
+                        res.append(decodeList());
+                        break;
                     default:
                         if(isNum(c)) {
                             res.append(decodeWord());
@@ -60,6 +63,38 @@ public class Bencode {
         return res.toString();
     }
 
+    public String decodeList() {
+        StringBuilder str = new StringBuilder();
+        str.append('[');
+
+        advance();
+        while (true) {
+            Optional<Character> cOpt = peek();
+            if (cOpt.isPresent()) {
+                char c = cOpt.get();
+                switch (c) {
+                    case 'e':
+                        str.append(']');
+                        return str.toString();
+                    case 'l':
+                        str.append(decodeList());
+                        break;
+                    case 'i':
+                        str.append(decodeNum());
+                        break;
+                    default:
+                        if (isNum(c)) {
+                            str.append(decodeWord());
+                        }
+                        break;
+                }
+                advance();
+            }else break;
+        }
+
+        return null;
+    }
+
     public String decodeNum() {
         StringBuilder str = new StringBuilder();
 
@@ -73,7 +108,6 @@ public class Bencode {
                     advance();
                 }
                 else{
-                    advance();
                     break;
                 }
             }else return null;

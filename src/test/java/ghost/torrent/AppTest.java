@@ -32,6 +32,28 @@ public class AppTest {
     }
 
     @Test
+    public void decodeList() {
+        Bencode ben = new Bencode("l6:Coding10:Challengese");
+        String expected = "['Coding' 'Challenges' ]";
+
+        assertEquals(expected, ben.decode());
+    }
+
+    @Test
+    public void decodeNestedList() {
+        Bencode ben = new Bencode("l5:helloi123el6:nestedi456el4:deepi789eeelel3:endee");
+        String expected = "[" +
+            "'hello' " +
+            "123 " +
+            "['nested' 456 ['deep' 789 ]]" +
+            "[]" +
+            "['end' ]" +
+            "]";
+
+        assertEquals(expected, ben.decode());
+    }
+
+    @Test
     public void EncodeString() {
         Bencode ben = new Bencode("'coding'");
         String expected = "6:coding";
