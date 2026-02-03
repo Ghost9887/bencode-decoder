@@ -66,8 +66,9 @@ public class Bencode {
 
     public String decodeDict() {
         StringBuilder str = new StringBuilder();
-        str.append('{');
         int counter = 0;
+
+        str.append('{');
 
         advance();
         while (true) {
@@ -80,10 +81,11 @@ public class Bencode {
                         return str.toString();
                     case 'l':
                         str.append(decodeList());
+                        counter++;
                         break;
                     case 'd':
                         str.append(decodeDict());
-                        counter = 0;
+                        counter++;
                         break;
                     case 'i':
                         str.append(decodeNum());
@@ -96,10 +98,8 @@ public class Bencode {
                         }
                         break;
                 }
-                if (counter % 2 == 1){
-                    str.append(':');
-                }else {
-                    counter = 0;
+                if (counter % 2 == 1) {
+                    str.append(": ");
                 }
                 advance();
             }else break;
